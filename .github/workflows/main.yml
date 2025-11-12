@@ -34,7 +34,7 @@ jobs:
 
       # Jalankan scanner
       - name: Start Scan
-        run: bun run ./helper/proxyip.ts
+        run: bun run ./script.ts
 
       # Commit & push hasil scan
       - name: Publish Result
