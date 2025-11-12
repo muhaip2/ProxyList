@@ -1,0 +1,50 @@
+name: Check and Update Proxy List 🌐
+
+on:
+  # Tentukan kapan workflow harus dijalankan.
+  # Contoh: Setiap hari pada tengah malam (00:00 UTC).
+  schedule:
+    - cron: '0 0 * * *'
+  # Memungkinkan untuk dijalankan secara manual dari tab Actions di GitHub.
+  workflow_dispatch:
+
+jobs:
+  run-proxy-checker:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout kode repositori
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+        
+      # 2. Setup Bun (Runtime JavaScript)
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      # 3. Instalasi dan Persiapan
+      # Langkah ini penting jika skrip Anda memiliki dependency lain,
+      # atau untuk memastikan Bun sudah siap.
+      - name: Bun Install (Jika ada package.json)
+        run: bun install
+        
+      # 4. Jalankan Skrip
+      # Ini akan menjalankan script.ts Anda.
+      - name: Run Proxy Checker Script
+        run: bun run script.ts
+        
+      # 5. Commit dan Push Perubahan (Hasil Output)
+      # Langkah ini akan menyimpan hasil output (ProxyList.txt, kvProxyList.json, dll.) kembali ke repositori.
+      - name: Commit and Push Results
+        run: |
+          git config --global user.name 'GitHub Actions Bot'
+          git config --global user.email 'actions@github.com'
+          
+          # Cek apakah ada perubahan pada file hasil (output)
+          if git diff --exit-code --name-only ./ProxyList.txt ./kvProxyList.json; then
+            echo "Tidak ada perubahan pada file proxy. Tidak ada commit yang diperlukan."
+          else
+            echo "Perubahan terdeteksi. Melakukan commit..."
+            git add . # Tambahkan semua file yang mungkin diubah (termasuk .txt dan .json)
+            git commit -m "🤖 Auto update: Active proxy list [skip ci]"
+            git push
+          fi
